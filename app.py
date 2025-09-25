@@ -54,28 +54,28 @@ THINKING_BUDGET_MODELS = {
 @st.cache_resource
 def load_client() -> genai.Client:
     """Load Google Gen AI Client."""
-    API_KEY = os.environ.get("GOOGLE_API_KEY")
-    PROJECT_ID = os.environ.get("GOOGLE_CLOUD_PROJECT", _project_id())
-    LOCATION = os.environ.get("GOOGLE_CLOUD_REGION", _region())
+    # API_KEY = os.environ.get("GOOGLE_API_KEY")
+    # PROJECT_ID = os.environ.get("GOOGLE_CLOUD_PROJECT", _project_id())
+    # LOCATION = os.environ.get("GOOGLE_CLOUD_REGION", _region())
 
-    if not API_KEY and not PROJECT_ID:
-        st.error(
-            "🚨 Configuration Error: Please set either `GOOGLE_API_KEY` or ensure "
-            "Application Default Credentials (ADC) with a Project ID are configured."
-        )
-        st.stop()
-    if not LOCATION:
-        st.warning(
-            "⚠️ Could not determine Google Cloud Region. Using 'global'. "
-            "Ensure GOOGLE_CLOUD_REGION environment variable is set or metadata service is accessible if needed."
-        )
-        LOCATION = "global"
+    # if not API_KEY and not PROJECT_ID:
+    #     st.error(
+    #         "🚨 Configuration Error: Please set either `GOOGLE_API_KEY` or ensure "
+    #         "Application Default Credentials (ADC) with a Project ID are configured."
+    #     )
+    #     st.stop()
+    # if not LOCATION:
+    #     st.warning(
+    #         "⚠️ Could not determine Google Cloud Region. Using 'global'. "
+    #         "Ensure GOOGLE_CLOUD_REGION environment variable is set or metadata service is accessible if needed."
+    #     )
+    #     LOCATION = "global"
 
     return genai.Client(
-        vertexai=True,
-        project=PROJECT_ID,
-        location=LOCATION,
-        api_key=API_KEY,
+        # vertexai=True,
+        # project=PROJECT_ID,
+        # location=LOCATION,
+        # api_key=API_KEY,
     )
 
 
