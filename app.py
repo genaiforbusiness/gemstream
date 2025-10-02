@@ -6,33 +6,33 @@ This module demonstrates the usage of the Gemini API in Vertex AI within a Strea
 import os
 
 from google import genai
-import google.auth
+# import google.auth
 from google.genai.types import GenerateContentConfig, Part, ThinkingConfig
-import httpx
+# import httpx
 import streamlit as st
 
 
-def _project_id() -> str:
-    """Use the Google Auth helper (via the metadata service) to get the Google Cloud Project"""
-    try:
-        _, project = google.auth.default()
-    except google.auth.exceptions.DefaultCredentialsError as e:
-        raise Exception("Could not automatically determine credentials") from e
-    if not project:
-        raise Exception("Could not determine project from credentials.")
-    return project
+# def _project_id() -> str:
+#     """Use the Google Auth helper (via the metadata service) to get the Google Cloud Project"""
+#     try:
+#         _, project = google.auth.default()
+#     except google.auth.exceptions.DefaultCredentialsError as e:
+#         raise Exception("Could not automatically determine credentials") from e
+#     if not project:
+#         raise Exception("Could not determine project from credentials.")
+#     return project
 
 
-def _region() -> str:
-    """Use the local metadata service to get the region"""
-    try:
-        resp = httpx.get(
-            "http://metadata.google.internal/computeMetadata/v1/instance/region",
-            headers={"Metadata-Flavor": "Google"},
-        )
-        return resp.text.split("/")[-1]
-    except Exception:
-        return "us-central1"
+# def _region() -> str:
+#     """Use the local metadata service to get the region"""
+#     try:
+#         resp = httpx.get(
+#             "http://metadata.google.internal/computeMetadata/v1/instance/region",
+#             headers={"Metadata-Flavor": "Google"},
+#         )
+#         return resp.text.split("/")[-1]
+#     except Exception:
+#         return "us-central1"
 
 
 MODELS = {
@@ -88,15 +88,15 @@ def get_model_name(name: str | None) -> str:
 
 st.link_button(
     "View on GitHub",
-    "https://github.com/GoogleCloudPlatform/generative-ai/tree/main/gemini/sample-apps/gemini-streamlit-cloudrun",
+    "https://github.com/genaiforbusiness/gemstream/tree/main/",
 )
 
-cloud_run_service = os.environ.get("K_SERVICE")
-if cloud_run_service:
-    st.link_button(
-        "Open in Cloud Run",
-        f"https://console.cloud.google.com/run/detail/us-central1/{cloud_run_service}/source",
-    )
+# cloud_run_service = os.environ.get("K_SERVICE")
+# if cloud_run_service:
+#     st.link_button(
+#         "Open in Cloud Run",
+#         f"https://console.cloud.google.com/run/detail/us-central1/{cloud_run_service}/source",
+#     )
 
 st.header(":sparkles: Gemini API in Vertex AI", divider="rainbow")
 client = load_client()
@@ -434,11 +434,17 @@ with tab3:
             """In this demo, you will be presented with a scene (e.g., a living room) and will use the Gemini model to perform visual understanding. You will see how Gemini can be used to recommend an item (e.g., a chair) from a list of furniture options as input. You can use Gemini to recommend a chair that would complement the given scene and will be provided with its rationale for such selections from the provided list."""
         )
 
-        room_image_uri = "https://storage.googleapis.com/github-repo/img/gemini/retail-recommendations/rooms/living_room.jpeg"
-        chair_1_image_uri = "https://storage.googleapis.com/github-repo/img/gemini/retail-recommendations/furnitures/chair1.jpeg"
-        chair_2_image_uri = "https://storage.googleapis.com/github-repo/img/gemini/retail-recommendations/furnitures/chair2.jpeg"
-        chair_3_image_uri = "https://storage.googleapis.com/github-repo/img/gemini/retail-recommendations/furnitures/chair3.jpeg"
-        chair_4_image_uri = "https://storage.googleapis.com/github-repo/img/gemini/retail-recommendations/furnitures/chair4.jpeg"
+        room_image_uri = "static/living_room.jpeg"
+        chair_1_image_uri = "static/chair1.jpeg"
+        chair_2_image_uri = "static/chair2.jpeg"
+        chair_3_image_uri = "static/chair3.jpeg"
+        chair_4_image_uri = "static/chair4.jpeg"
+
+        room_image = client.files.upload(file="static/living_room.jpeg")
+        chair_1 = client.files.upload(file="static/chair1.jpeg")
+        chair_2 = client.files.upload(file="static/chair2.jpeg")
+        chair_3 = client.files.upload(file="static/chair3.jpeg")
+        chair_4 = client.files.upload(file="static/chair4.jpeg")
 
         st.image(room_image_uri, width=350, caption="Image of a living room")
         st.image(
@@ -458,17 +464,17 @@ with tab3:
         content = [
             "Consider the following chairs:",
             "chair 1:",
-            Part.from_uri(file_uri=chair_1_image_uri, mime_type="image/jpeg"),
+            chair_1,
             "chair 2:",
-            Part.from_uri(file_uri=chair_2_image_uri, mime_type="image/jpeg"),
+            chair_2,
             "chair 3:",
-            Part.from_uri(file_uri=chair_3_image_uri, mime_type="image/jpeg"),
+            chair_3,
             "and",
             "chair 4:",
-            Part.from_uri(file_uri=chair_4_image_uri, mime_type="image/jpeg"),
+            chair_4,
             "\n"
             "For each chair, explain why it would be suitable or not suitable for the following room:",
-            Part.from_uri(file_uri=room_image_uri, mime_type="image/jpeg"),
+            room_image,
             "Only recommend for the room provided and not other rooms. Provide your recommendation in a table format with chair name and reason as columns.",
         ]
 
@@ -492,7 +498,9 @@ with tab3:
             st.code(content, language="markdown")
 
     with oven:
-        stove_screen_uri = "https://storage.googleapis.com/github-repo/img/gemini/multimodality_usecases_overview/stove.jpg"
+        stove_screen_uri = "static/stove.jpg"
+        stove_screen = client.files.upload(file="static/stove.jpg")
+
         st.write(
             "Equipped with the ability to extract information from visual elements on screens, Gemini can analyze screenshots, icons, and layouts to provide a holistic understanding of the depicted scene."
         )
@@ -515,9 +523,7 @@ If instructions include buttons, also explain where those buttons are physically
                     response = client.models.generate_content(
                         model=selected_model,
                         contents=[
-                            Part.from_uri(
-                                file_uri=stove_screen_uri, mime_type="image/jpeg"
-                            ),
+                            stove_screen,
                             prompt,
                         ],
                     ).text
@@ -527,7 +533,9 @@ If instructions include buttons, also explain where those buttons are physically
             st.code(prompt, language="markdown")
 
     with er_diagrams:
-        er_diag_uri = "https://storage.googleapis.com/github-repo/img/gemini/multimodality_usecases_overview/er.png"
+        er_diag_uri = "static/er.png"
+        er_diag = client.files.upload(file="static/er.png")
+
         st.write(
             "Gemini multimodal capabilities empower it to comprehend diagrams and take actionable steps, such as optimization or code generation. The following example demonstrates how Gemini can decipher an Entity Relationship (ER) diagram."
         )
@@ -545,17 +553,22 @@ If instructions include buttons, also explain where those buttons are physically
                     response = client.models.generate_content(
                         model=selected_model,
                         contents=[
-                            Part.from_uri(file_uri=er_diag_uri, mime_type="image/jpeg"),
+                            er_diag,
                             prompt,
                         ],
                     ).text
+                    st.markdown(response)
+
         with tab2:
             st.write("Prompt used:")
             st.code(prompt, language="markdown")
 
     with glasses:
-        compare_img_1_uri = "https://storage.googleapis.com/github-repo/img/gemini/multimodality_usecases_overview/glasses1.jpg"
-        compare_img_2_uri = "https://storage.googleapis.com/github-repo/img/gemini/multimodality_usecases_overview/glasses2.jpg"
+        compare_img_1_uri = "static/glasses1.jpg"
+        compare_img_2_uri = "static/glasses2.jpg"
+        compare_img_1 = client.files.upload(file="static/glasses1.jpg")
+        compare_img_2 = client.files.upload(file="static/glasses2.jpg")
+
 
         st.write(
             """Gemini is capable of image comparison and providing recommendations. This can be useful in industries like e-commerce and retail.
@@ -585,10 +598,10 @@ If instructions include buttons, also explain where those buttons are physically
             f"""Which of these glasses you recommend for me based on the shape of my face:{face_type}?
       I have an {face_type} shape face.
       Glasses 1: """,
-            Part.from_uri(file_uri=compare_img_1_uri, mime_type="image/jpeg"),
+            compare_img_1,
             """
       Glasses 2: """,
-            Part.from_uri(file_uri=compare_img_2_uri, mime_type="image/jpeg"),
+            compare_img_2,
             f"""
       Explain how you made to this decision.
       Provide your recommendation based on my face shape, and reasoning for each in {output_type} format.
@@ -606,7 +619,7 @@ If instructions include buttons, also explain where those buttons are physically
                     response = client.models.generate_content(
                         model=selected_model,
                         contents=[
-                            Part.from_uri(file_uri=er_diag_uri, mime_type="image/jpeg"),
+                            # Part.from_uri(file_uri=er_diag_uri, mime_type="image/jpeg"),
                             content,
                         ],
                     ).text
@@ -616,7 +629,9 @@ If instructions include buttons, also explain where those buttons are physically
             st.code(content, language="markdown")
 
     with math_reasoning:
-        math_image_uri = "https://storage.googleapis.com/github-repo/img/gemini/multimodality_usecases_overview/math_beauty.jpg"
+        math_image_uri = "static/math_beauty.jpg"
+        math_image = client.files.upload(file="static/math_beauty.jpg")
+
 
         st.write(
             "Gemini can also recognize math formulas and equations and extract specific information from them. This capability is particularly useful for generating explanations for math problems, as shown below."
@@ -652,9 +667,7 @@ INSTRUCTIONS:
                     response = client.models.generate_content(
                         model=selected_model,
                         contents=[
-                            Part.from_uri(
-                                file_uri=math_image_uri, mime_type="image/jpeg"
-                            ),
+                            math_image,
                             prompt,
                         ],
                     ).text
@@ -680,7 +693,8 @@ with tab4:
         st.markdown(
             """Gemini can also provide the description of what is going on in the video:"""
         )
-        video_desc_uri = "https://storage.googleapis.com/github-repo/img/gemini/multimodality_usecases_overview/mediterraneansea.mp4"
+        video_desc_uri = "static/mediterraneansea.mp4"
+        video_desc = client.files.upload(file="static/mediterraneansea.mp4")
 
         if video_desc_uri:
             st.video(video_desc_uri)
@@ -702,9 +716,7 @@ with tab4:
                         response = client.models.generate_content(
                             model=selected_model,
                             contents=[
-                                Part.from_uri(
-                                    file_uri=video_desc_uri, mime_type="video/mp4"
-                                ),
+                                video_desc,
                                 prompt,
                             ],
                         ).text
@@ -718,7 +730,10 @@ with tab4:
         st.markdown(
             """Gemini can also extract tags throughout a video, as shown below:."""
         )
-        video_tags_uri = "https://storage.googleapis.com/github-repo/img/gemini/multimodality_usecases_overview/photography.mp4"
+        video_tags_uri = "static/photography.mp4"
+        video_tags = client.files.upload(file="static/photography.mp4")
+
+
 
         if video_tags_uri:
             st.video(video_tags_uri)
@@ -742,9 +757,7 @@ with tab4:
                         response = client.models.generate_content(
                             model=selected_model,
                             contents=[
-                                Part.from_uri(
-                                    file_uri=video_tags_uri, mime_type="video/mp4"
-                                ),
+                                video_tags,
                                 prompt,
                             ],
                         ).text
@@ -758,7 +771,9 @@ with tab4:
         st.markdown(
             """Below is another example of using Gemini to ask questions about objects, people or the context, as shown in the video about Pixel 8 below:"""
         )
-        video_highlights_uri = "https://storage.googleapis.com/github-repo/img/gemini/multimodality_usecases_overview/pixel8.mp4"
+        video_highlights_uri = "static/pixel8.mp4"
+        video_highlights = client.files.upload(file="static/pixel8.mp4")
+
 
         if video_highlights_uri:
             st.video(video_highlights_uri)
@@ -781,9 +796,7 @@ Provide the answer in table format.
                         response = client.models.generate_content(
                             model=selected_model,
                             contents=[
-                                Part.from_uri(
-                                    file_uri=video_highlights_uri, mime_type="video/mp4"
-                                ),
+                                video_highlights,
                                 prompt,
                             ],
                         ).text
@@ -797,7 +810,9 @@ Provide the answer in table format.
         st.markdown(
             """Even in short, detail-packed videos, Gemini can identify the locations."""
         )
-        video_geolocation_uri = "https://storage.googleapis.com/github-repo/img/gemini/multimodality_usecases_overview/bus.mp4"
+        video_geolocation_uri = "static/bus.mp4"
+        video_geolocation = client.files.upload(file="static/bus.mp4")
+
 
         if video_geolocation_uri:
             st.video(video_geolocation_uri)
@@ -829,10 +844,7 @@ Provide the answer in table format.
                         response = client.models.generate_content(
                             model=selected_model,
                             contents=[
-                                Part.from_uri(
-                                    file_uri=video_geolocation_uri,
-                                    mime_type="video/mp4",
-                                ),
+                                video_geolocation,
                                 prompt,
                             ],
                         ).text
